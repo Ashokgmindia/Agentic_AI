@@ -4,6 +4,9 @@ from crewai import LLM, Agent, Crew, Process, Task
 from dotenv import load_dotenv
 from datetime import datetime
 
+
+
+
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -34,6 +37,7 @@ class StakeholderAgent:
             ),
             verbose=True,
             memory=True,
+            multimodal=True,
             allow_delegation=False,
             llm=self.llm,
         )
@@ -121,7 +125,8 @@ class StakeholderAgent:
                 f"- Status: Draft / For Review / Approved"
             ),
             agent=self.stakeholder_agent,
-            output_file="brd_final.md"
+            # tools=[markdown_to_pdf],
+            output_file="output/stakeholder_document.md"
         )
 
         crew = Crew(
@@ -138,3 +143,5 @@ class StakeholderAgent:
         except Exception as e:
             logger.error(f"[StakeholderAgent] Crew execution failed: {e}")
             return "Sorry, I couldn't generate the Business Requirements Document at this moment. Please try again later."
+
+
