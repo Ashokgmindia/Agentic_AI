@@ -13,8 +13,16 @@ from Stakeholder_Agent import StakeholderAgent
 from BusinessAnalyst_Agent import BusinessAnalystAgent
 from business_analyst_domain_expert import BusinessAnalystDomainExpert
 from product_manager import ProductManagerAgent
-from agile_project_manager import AgileProjectManagerAgent  # NEW
-from agent_executor import UnifiedAgentExecutor
+from agile_project_manager import AgileProjectManagerAgent
+
+# ✅ Import the 5 executors
+from agent_executor import (
+    StakeholderAgentExecutor,
+    BusinessAnalystAgentExecutor,
+    DomainExpertAgentExecutor,
+    ProductManagerAgentExecutor,
+    AgileProjectManagerAgentExecutor,
+)
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -30,16 +38,25 @@ def create_stakeholder_app(host: str, port: int):
         id="stakeholder_requirements_analyst",
         name="Stakeholder Requirements Analyst",
         description="Analyzes multimodal stakeholder inputs and generates comprehensive BRDs with governance compliance.",
-        tags=["business-analysis", "requirements", "BRD", "stakeholder-management"],
+        tags=[
+            "vision-document-analysis",
+            "stakeholder-input",
+            "project-scope-discovery",
+            "requirement-elicitation",
+            "strategy-to-insight",
+            "early-phase-analysis"
+        ],
         examples=[
-            "Analyze these meeting notes and create a BRD for our new customer portal project",
-            "Generate requirements document from this product vision document",
-            "Create a BRD based on stakeholder interviews about the mobile app redesign",
+            "Analyze this project vision document and summarize the main objectives and scope boundaries",
+            "Extract key stakeholder expectations from a strategy presentation PDF",
+            "Process meeting notes from a client kickoff session to identify functional goals",
+            "Review a stakeholder-submitted project charter and highlight ambiguous requirements",
+            "Interpret annotated mockups from a product owner to uncover implied functionality",
         ],
     )
     agent_card = AgentCard(
         name="Stakeholder Requirements Agent",
-        description="Processes multimodal stakeholder inputs (text, docs, images, audio) into audit-ready BRDs.",
+        description="Processes multimodal stakeholder inputs (text, docs, images, audio) into audit-ready project vision document.",
         url=f"http://{host}:{port}/",
         version="1.0.0",
         defaultInputModes=StakeholderAgent.SUPPORTED_CONTENT_TYPES,
@@ -47,7 +64,7 @@ def create_stakeholder_app(host: str, port: int):
         capabilities=capabilities,
         skills=[skill],
     )
-    handler = DefaultRequestHandler(agent_executor=UnifiedAgentExecutor(), task_store=InMemoryTaskStore())
+    handler = DefaultRequestHandler(agent_executor=StakeholderAgentExecutor(), task_store=InMemoryTaskStore())
     return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
 
@@ -74,7 +91,7 @@ def create_business_app(host: str, port: int):
         capabilities=capabilities,
         skills=[skill],
     )
-    handler = DefaultRequestHandler(agent_executor=UnifiedAgentExecutor(), task_store=InMemoryTaskStore())
+    handler = DefaultRequestHandler(agent_executor=BusinessAnalystAgentExecutor(), task_store=InMemoryTaskStore())
     return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
 
@@ -101,7 +118,7 @@ def create_domain_expert_app(host: str, port: int):
         capabilities=capabilities,
         skills=[skill],
     )
-    handler = DefaultRequestHandler(agent_executor=UnifiedAgentExecutor(), task_store=InMemoryTaskStore())
+    handler = DefaultRequestHandler(agent_executor=DomainExpertAgentExecutor(), task_store=InMemoryTaskStore())
     return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
 
@@ -128,7 +145,7 @@ def create_product_manager_app(host: str, port: int):
         capabilities=capabilities,
         skills=[skill],
     )
-    handler = DefaultRequestHandler(agent_executor=UnifiedAgentExecutor(), task_store=InMemoryTaskStore())
+    handler = DefaultRequestHandler(agent_executor=ProductManagerAgentExecutor(), task_store=InMemoryTaskStore())
     return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
 
@@ -155,7 +172,7 @@ def create_agile_pm_app(host: str, port: int):
         capabilities=capabilities,
         skills=[skill],
     )
-    handler = DefaultRequestHandler(agent_executor=UnifiedAgentExecutor(), task_store=InMemoryTaskStore())
+    handler = DefaultRequestHandler(agent_executor=AgileProjectManagerAgentExecutor(), task_store=InMemoryTaskStore())
     return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
 
@@ -170,21 +187,21 @@ async def main():
         business_app = create_business_app(host, 10005)
         domain_expert_app = create_domain_expert_app(host, 10006)
         product_manager_app = create_product_manager_app(host, 10007)
-        agile_pm_app = create_agile_pm_app(host, 10008)  # NEW
+        agile_pm_app = create_agile_pm_app(host, 10008)
 
         # Configs
         config1 = uvicorn.Config(stakeholder_app.build(), host=host, port=10004, log_level="info")
         config2 = uvicorn.Config(business_app.build(), host=host, port=10005, log_level="info")
         config3 = uvicorn.Config(domain_expert_app.build(), host=host, port=10006, log_level="info")
         config4 = uvicorn.Config(product_manager_app.build(), host=host, port=10007, log_level="info")
-        config5 = uvicorn.Config(agile_pm_app.build(), host=host, port=10008, log_level="info")  # NEW
+        config5 = uvicorn.Config(agile_pm_app.build(), host=host, port=10008, log_level="info")
 
         # Servers
         server1 = uvicorn.Server(config1)
         server2 = uvicorn.Server(config2)
         server3 = uvicorn.Server(config3)
         server4 = uvicorn.Server(config4)
-        server5 = uvicorn.Server(config5)  # NEW
+        server5 = uvicorn.Server(config5)
 
         logger.info(
             "Starting Stakeholder (10004), Business Analyst (10005), Domain Expert (10006), "
@@ -195,7 +212,7 @@ async def main():
             server2.serve(),
             server3.serve(),
             server4.serve(),
-            server5.serve(),  # NEW
+            server5.serve(),
         )
 
     except MissingAPIKeyError as e:

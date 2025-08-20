@@ -104,8 +104,8 @@ class AgileProjectManagerAgent:
             )
 
 
-if __name__ == "__main__":
-    # Example usage
-    agent = AgileProjectManagerAgent()
-    output = agent.invoke("Backlog: User login, Dashboard analytics, Payment gateway integration, Notifications, Admin panel")
-    print(output)
+# if __name__ == "__main__":
+#     # Example usage
+#     agent = AgileProjectManagerAgent()
+#     output = agent.invoke("Backlog: User login, Dashboard analytics, Payment gateway integration, Notifications, Admin panel")
+#     print(output)
