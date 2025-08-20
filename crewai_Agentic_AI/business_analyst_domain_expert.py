@@ -61,7 +61,7 @@ class BusinessAnalystDomainExpert:
             verbose=True,
             memory=True,
             multimodal=True,
-            allow_delegation=False,
+            allow_delegation=True,
             llm=self.llm,
         )
 

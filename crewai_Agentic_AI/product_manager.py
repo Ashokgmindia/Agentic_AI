@@ -51,7 +51,7 @@ class ProductManagerAgent:
             ),
             verbose=True,
             memory=True,
-            allow_delegation=False,
+            allow_delegation=True,
             llm=self.llm,
         )
 

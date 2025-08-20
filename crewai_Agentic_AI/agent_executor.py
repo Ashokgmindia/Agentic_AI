@@ -40,7 +40,7 @@ class StakeholderAgentExecutor(AgentExecutor):
             raise ServerError(error=InvalidParamsError())
 
         try:
-            result = self.agent.invoke(context.get_user_input())
+            result = await self.agent.invoke(context.get_user_input())
             logger.info(f"StakeholderAgent result: {result}")
         except Exception as e:
             logger.error(f"Error invoking StakeholderAgent: {e}")
