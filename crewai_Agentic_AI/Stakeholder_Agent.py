@@ -3,9 +3,7 @@ import logging
 from crewai import LLM, Agent, Crew, Process, Task
 from dotenv import load_dotenv
 from datetime import datetime
-
-
-
+from tools.md_to_pdf import markdown_to_pdf
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -23,17 +21,23 @@ class StakeholderAgent:
         self.stakeholder_agent = Agent(
             role="Senior Stakeholder Intelligence & Requirements Synthesis Agent",
             goal=(
-                "Intelligently ingest, interpret, and synthesize unstructured stakeholder inputs — including text, PDFs, DOCX, images, audio transcripts, and meeting recordings — "
-                "into a comprehensive, traceable, and governance-compliant Business Requirements Document (BRD) aligned with enterprise strategy, regulatory standards, and technical feasibility. "
-                "Apply contextual reasoning, conflict resolution, priority modeling, and stakeholder intent inference to deliver decision-ready artifacts."
+                "Ingest, interpret, and synthesize unstructured stakeholder inputs — including text, PDFs, DOCX, images, "
+                "audio transcripts, and meeting recordings — into comprehensive, traceable, and governance-compliant "
+                "requirements and visioning artifacts aligned with enterprise strategy, regulatory standards, and "
+                "technical feasibility. "
+                "Act as the central collaboration hub for the crew, proactively communicating with other agents to "
+                "clarify ambiguity, resolve conflicts, validate assumptions, and ensure alignment across domains. "
+                "When inputs are incomplete or conflicting, request additional information from peers before finalizing deliverables."
             ),
             backstory=(
                 "You are a high-fidelity cognitive extension of enterprise architecture and product governance teams. "
-                "Trained on thousands of real-world BRDs, stakeholder interviews, compliance frameworks (e.g., GDPR, HIPAA, SOX), and agile/waterfall delivery patterns, "
-                "you act as the central nervous system between business vision and execution. "
-                "You don't just transcribe needs — you anticipate implications, detect ambiguity, challenge assumptions, and model trade-offs. "
-                "You enforce traceability, version control, and alignment across strategic objectives, user journeys, and system capabilities. "
-                "Your outputs are audit-ready, stakeholder-validated, and engineered for downstream use by product, legal, and engineering teams."
+                "Trained on real-world stakeholder interviews, compliance frameworks (GDPR, HIPAA, SOX), "
+                "and delivery patterns (agile and waterfall), you act as the central nervous system between business vision and execution. "
+                "You anticipate implications, detect ambiguity, challenge assumptions, and model trade-offs. "
+                "You ensure traceability, enforce version control, and drive alignment across strategic objectives, user journeys, "
+                "and system capabilities. "
+                "You are designed to collaborate with other crew agents, asking questions, escalating risks, and synthesizing consensus "
+                "into decision-ready artifacts."
             ),
             verbose=True,
             memory=True,
@@ -45,7 +49,7 @@ class StakeholderAgent:
     def invoke(self, stakeholder_inputs: str) -> str:
         logger.info(f"[StakeholderAgent] Starting BRD generation workflow for inputs: {stakeholder_inputs[:100]}...")
 
-        # Get current date for document metadata
+        
         current_date = datetime.now().strftime("%Y-%m-%d")
 
         
@@ -74,6 +78,9 @@ class StakeholderAgent:
                 "- Define how success will be measured at a strategic level.\n\n"
                 "7. **High-Level Roadmap**\n"
                 "- Describe phased approach (MVP, enhancements, future phases).\n\n"
+                "8. **Tool Usage**\n"
+                "- Once the document is created in Markdown format, use the `markdown_to_pdf` tool "
+                "to convert `/output/project_vision_document.md` into `/output/project_vision_document.pdf`.\n\n"
                 "⚠️ If inputs are unclear or incomplete, flag them under 'Open Questions'."
             ),
             expected_output=(
@@ -107,9 +114,11 @@ class StakeholderAgent:
                 f"- Version: 1.0\n"
                 f"- Prepared By: [Stakeholder Intelligence Agent]\n"
                 f"- Date: {current_date}\n"
-                f"- Status: Draft / For Review / Approved"
+                f"- Status: Draft / For Review / Approved\n\n"
+                "Additionally, produce `/output/project_vision_document.pdf` using the `markdown_to_pdf` tool."
             ),
             agent=self.stakeholder_agent,
+            tools=[markdown_to_pdf],
             output_file="output/project_vision_document.md"
         )
 
