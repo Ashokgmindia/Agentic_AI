@@ -35,10 +35,10 @@ class StakeholderAgent:
 
     def __init__(self):
         # Load LLM (Gemini preferred, fallback to OpenAI)
-        if os.getenv("GEMINI_API_KEY"):
+        if os.getenv("GOOGLE_API_KEY"):
             self.llm = LLM(
                 model="gemini/gemini-2.5-flash",
-                api_key=os.getenv("GEMINI_API_KEY")
+                api_key=os.getenv("GOOGLE_API_KEY")
             )
         elif os.getenv("OPENAI_API_KEY"):
             self.llm = LLM(
@@ -46,7 +46,7 @@ class StakeholderAgent:
                 api_key=os.getenv("OPENAI_API_KEY")
             )
         else:
-            raise ValueError("Neither GEMINI_API_KEY nor OPENAI_API_KEY environment variable is set.")
+            raise ValueError("Neither GOOGLE_API_KEY nor OPENAI_API_KEY environment variable is set.")
 
         # All multimodal tools
         self.tools = [
