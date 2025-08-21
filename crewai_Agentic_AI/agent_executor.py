@@ -5,7 +5,7 @@ from a2a.server.tasks import TaskUpdater
 from a2a.types import InternalError, InvalidParamsError, Part, TextPart, UnsupportedOperationError
 from a2a.utils.errors import ServerError
 
-from Stakeholder_Agent import StakeholderAgent
+from StakeholderAgent import StakeholderAgent
 from BusinessAnalyst_Agent import BusinessAnalystAgent
 from business_analyst_domain_expert import BusinessAnalystDomainExpert
 from product_manager import ProductManagerAgent

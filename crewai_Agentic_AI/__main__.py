@@ -9,7 +9,7 @@ from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 
-from Stakeholder_Agent import StakeholderAgent
+from StakeholderAgent import StakeholderAgent
 from BusinessAnalyst_Agent import BusinessAnalystAgent
 from business_analyst_domain_expert import BusinessAnalystDomainExpert
 from product_manager import ProductManagerAgent
