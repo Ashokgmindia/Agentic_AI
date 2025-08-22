@@ -720,44 +720,6 @@ def mcp_search(query: str):
         ]
     }
 
-@tool("A2A Communication")
-def a2a_communicate(agent_name: str, message: str, task_id: str = None):
-    """Real A2A communication with other GMI agents."""
-    
-    agent_endpoints = {
-        "Business Analyst Agent": "http://localhost:10005",
-        "Business Analyst Domain Expert Agent": "http://localhost:10006", 
-        "Product Manager Agent": "http://localhost:10007",
-        "Agile Project Manager Agent": "http://localhost:10008"
-    }
-    
-    if agent_name not in agent_endpoints:
-        return {"error": f"Unknown agent: {agent_name}"}
-    
-    try:
-        response = requests.post(
-            f"{agent_endpoints[agent_name]}/invoke",
-            json={"input": message},
-            timeout=30
-        )
-        
-        if response.status_code == 200:
-            result = response.json()["result"]
-            return {
-                "task_id": task_id or f"GMI_task_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                "from_agent": "Stakeholder_Agent",
-                "to_agent": agent_name,
-                "message_sent": message,
-                "response_received": result,
-                "timestamp": datetime.now().isoformat(),
-                "status": "completed"
-            }
-        else:
-            return {"error": f"Agent {agent_name} returned error: {response.text}"}
-            
-    except Exception as e:
-        return {"error": f"Communication failed with {agent_name}: {str(e)}"}
-
 
 # ========== HTML Report Generation (Fixed) ==========
 @tool("Generate HTML Report")
