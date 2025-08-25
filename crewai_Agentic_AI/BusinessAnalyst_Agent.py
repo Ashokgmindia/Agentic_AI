@@ -1,17 +1,17 @@
-import os
-import logging
-from crewai import LLM, Agent, Crew, Process, Task
-from dotenv import load_dotenv
-from datetime import datetime
-from typing import Union, List
-# from Stakeholder_Agent import StakeholderAgent
-from crewai_tools import MCPServerAdapter
-from mcp import StdioServerParameters
-# from Stakeholder_Agent import stakeholder_agent
+# import os
+# import logging
+# from crewai import LLM, Agent, Crew, Process, Task
+# from dotenv import load_dotenv
+# from datetime import datetime
+# from typing import Union, List
+# # from Stakeholder_Agent import StakeholderAgent
+# from crewai_tools import MCPServerAdapter
+# from mcp import StdioServerParameters
 
 
-load_dotenv()
-logger = logging.getLogger(__name__)
+
+# load_dotenv()
+# logger = logging.getLogger(__name__)
 
 
 # server_params_list = [
@@ -19,21 +19,189 @@ logger = logging.getLogger(__name__)
 #         command="python",
 #         args=["server/search_tools.py"], 
 #         env={"UV_PYTHON": "3.12", **os.environ},
+#     ),
+#     StdioServerParameters(
+#         command="python",
+#         args=["server/Rag_tools.py"], 
+#         env={"UV_PYTHON": "3.12", **os.environ},
 #     )
-#     # StdioServerParameters(
-#     #     command="python",
-#     #     args=["server/Rag_tools.py"], 
-#     #     env={"UV_PYTHON": "3.12", **os.environ},
-#     # )
 # ]
 
 
-# server_params = StdioServerParameters(
-#     command="python",
-#     args=["server/search_tools.py"], 
-#     env={"UV_PYTHON": "3.12", **os.environ},
-# )
 
+
+
+# class BusinessAnalystAgent:
+#     """Multimodal Agent that performs requirement gathering and BRD/User Story generation."""
+
+#     SUPPORTED_CONTENT_TYPES = [
+#         "text/plain",
+#         "application/pdf",
+#         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+#         "image/jpeg",
+#         "image/png",
+#         "audio/wav",
+#         "audio/mp3",
+#     ]
+
+#     def __init__(self):
+        
+#         if os.getenv("GEMINI_API_KEY"):
+#             self.llm = LLM(model="gemini/gemini-2.5-flash-lite-preview-06-17", api_key=os.getenv("GEMINI_API_KEY"))
+#         elif os.getenv("OPENAI_API_KEY"):
+#             self.llm = LLM(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY"))
+#         else:
+#             raise ValueError("Neither GEMINI_API_KEY nor OPENAI_API_KEY environment variable is set.")
+
+#         self.business_analyst = Agent(
+#             role="Senior Business Analyst & Strategic Advisor",
+#             goal=(
+#                 "Drive business transformation by performing deep analysis of "
+#                 "requirements, uncovering inefficiencies, and shaping actionable "
+#                 "solutions that align with long-term organizational strategy. "
+#                 "Ensure your insights empower decision-making and provide a "
+#                 "strong foundation for execution by other agents."
+#             ),
+#             backstory=(
+#                 "You are a seasoned Business Analyst with 20+ years of experience "
+#                 "bridging the gap between business vision and technical delivery. "
+#                 "Known for your ability to see the big picture while managing "
+#                 "details, you specialize in uncovering hidden risks, identifying "
+#                 "value opportunities, and ensuring that every requirement serves "
+#                 "a clear business outcome. "
+#                 "You thrive in collaborative environments where your structured "
+#                 "thinking and strategic mindset elevate the contributions of others."
+#             ),
+#             verbose=True,
+#             memory=True,
+#             # multimodal=True,
+#             allow_delegation=True,
+    
+#             llm=self.llm,
+#         )
+
+#     async def invoke(self, stakeholder_inputs: Union[str, List[str]]) -> str:
+#         """
+#         Accepts raw project context (str) OR a list of multimodal inputs (file paths, transcripts).
+#         """
+#         logger.info(f"[BusinessAnalystAgent] Starting multimodal requirements analysis...")
+
+#         current_date = datetime.now().strftime("%Y-%m-%d")
+#         with MCPServerAdapter(server_params_list) as tools:
+#             print(f"Available MCP tools: {[tool.name for tool in tools]}")
+
+#         business_requirements_analysis_task = Task(
+#             description=(
+#                 "This is a two-phase task requiring advanced business analysis expertise:\n\n"
+#                 "🔹 **Phase 1: Stakeholder Input Analysis**\n"
+#                 "- Perform a structured and critical analysis of the provided stakeholder inputs.\n"
+#                 "- Use advanced techniques such as SWOT analysis, PESTLE assessment, stakeholder influence mapping, "
+#                 "and regulatory/compliance impact evaluation.\n"
+#                 "- Identify conflicts, trade-offs, hidden assumptions, and alignment gaps across stakeholders.\n"
+#                 "- Summarize key business drivers, risks, and success enablers.\n\n"
+#                 "🔹 **Phase 2: BRD Creation**\n"
+#                 "- Based on the insights from Phase 1, craft an enterprise-grade Business Requirements Document (BRD) "
+#                 "for the strategic digital transformation project: development of an AI-driven global e-commerce platform.\n"
+#                 "- Ensure the document is tailored to inform and persuade executives, investors, project managers, "
+#                 "and solution architects, serving as the authoritative reference.\n"
+#                 "- Connect corporate vision to functional and technical requirements, ensure compliance with "
+#                 "data privacy and international regulations, and emphasize financial/operational implications.\n\n"
+#                 f"Inputs provided: {stakeholder_inputs}"
+#             ),
+#             expected_output=(
+#                 "Your final deliverable MUST include two comprehensive sections:\n\n"
+#                 "### 1. Advanced Stakeholder Input Analysis\n"
+#                 "- Stakeholder matrix (influence vs. interest)\n"
+#                 "- SWOT and/or PESTLE analysis of the project context\n"
+#                 "- Identification of competing priorities, conflicts, and trade-offs\n"
+#                 "- Key business drivers, risks, enablers, and regulatory considerations\n\n"
+#                 "### 2. Formal Business Requirements Document (BRD)\n"
+#                 "1. Executive Vision & Strategic Alignment\n"
+#                 "   - Business case, objectives, and value proposition\n"
+#                 "   - Alignment with corporate mission and long-term strategy\n\n"
+#                 "2. Market & Competitive Landscape\n"
+#                 "   - Benchmarking, trends, and opportunities\n"
+#                 "   - Differentiation factors and positioning\n\n"
+#                 "3. Project Scope & Boundaries\n"
+#                 "   - In-scope, out-of-scope, dependencies, and exclusions\n\n"
+#                 "4. Stakeholder & Governance Model\n"
+#                 "   - Governance structure and RACI matrix\n"
+#                 "   - Escalation paths and decision-making protocols\n\n"
+#                 "5. Detailed Business Requirements\n"
+#                 "   - Functional, non-functional, regulatory requirements\n"
+#                 "   - Prioritization matrix (Must/Should/Could/Won’t)\n\n"
+#                 "6. Current vs. Future State Blueprint\n"
+#                 "   - As-Is vs. To-Be workflows, supported by diagrams\n"
+#                 "   - Gap analysis and phased transformation roadmap\n\n"
+#                 "7. Risk & Compliance Considerations\n"
+#                 "   - Risk register with likelihood/impact scoring\n"
+#                 "   - Data privacy, cybersecurity, and regulatory obligations\n\n"
+#                 "8. Financial & ROI Analysis\n"
+#                 "   - High-level cost models, CAPEX vs. OPEX\n"
+#                 "   - ROI projections, break-even timeline, and sensitivity analysis\n\n"
+#                 "9. Success Metrics & KPIs\n"
+#                 "   - Leading and lagging indicators tied to business outcomes\n"
+#                 "   - Metrics for adoption, performance, and financial impact\n\n"
+#                 "10. Appendices\n"
+#                 "   - Glossary, reference models, raw stakeholder input mapping\n\n"
+#                 "### Document Metadata\n"
+#                 f"- Prepared By: Business Analyst Agent\n- Date: {current_date}"
+#                 " - use the MCP tool for web_search"
+#                 "using the tool `knowledge_base_manager_tool`"
+#             ),
+#             agent=self.business_analyst,
+#              tools=tools,
+              
+#             output_file="output/business_requirements_document.md"
+           
+#         )
+
+
+#         crew = Crew(
+#             agents=[self.business_analyst],
+#             tasks=[business_requirements_analysis_task],
+#             process=Process.sequential,
+#             verbose=True,
+#         )
+
+#         try:
+#             result = await crew.kickoff_async(inputs={"stakeholder_inputs": stakeholder_inputs})
+#             logger.info(f"[BusinessAnalystAgent] Crew final response: {result}")
+#             return str(result)
+#         except Exception as e:
+#             logger.error(f"[BusinessAnalystAgent] Crew execution failed: {e}")
+#             return "Sorry, I couldn't generate the Business Requirements Document at this moment. Please try again later."
+        
+import os
+import logging
+from crewai import LLM, Agent, Crew, Process, Task
+from dotenv import load_dotenv
+from datetime import datetime
+from typing import Union, List
+from crewai_tools import MCPServerAdapter
+from mcp import StdioServerParameters
+
+load_dotenv()
+logger = logging.getLogger(__name__)
+
+
+server_params_list = [
+    # StdioServerParameters(
+    #     command="python",
+    #     args=["server/search_tools.py"],
+    #     env={"UV_PYTHON": "3.12", **os.environ},
+    # ),
+    StdioServerParameters(
+        command="python",
+        args=["server/stakeholder_tools.py"],
+        env={"UV_PYTHON": "3.12", **os.environ},
+    ),
+    StdioServerParameters(
+        command="python",
+        args=["server/Rag_tools.py"],
+        env={"UV_PYTHON": "3.12", **os.environ},
+    )
+]
 
 class BusinessAnalystAgent:
     """Multimodal Agent that performs requirement gathering and BRD/User Story generation."""
@@ -49,7 +217,7 @@ class BusinessAnalystAgent:
     ]
 
     def __init__(self):
-        
+       
         if os.getenv("GEMINI_API_KEY"):
             self.llm = LLM(model="gemini/gemini-2.5-flash-lite-preview-06-17", api_key=os.getenv("GEMINI_API_KEY"))
         elif os.getenv("OPENAI_API_KEY"):
@@ -57,6 +225,12 @@ class BusinessAnalystAgent:
         else:
             raise ValueError("Neither GEMINI_API_KEY nor OPENAI_API_KEY environment variable is set.")
 
+       
+        self.tools_adapter = MCPServerAdapter(server_params_list)
+        self.tools = self.tools_adapter.__enter__()
+        logger.info(f"[BusinessAnalystAgent] Available MCP tools: {[tool.name for tool in self.tools]}")
+
+     
         self.business_analyst = Agent(
             role="Senior Business Analyst & Strategic Advisor",
             goal=(
@@ -78,91 +252,94 @@ class BusinessAnalystAgent:
             ),
             verbose=True,
             memory=True,
-            # multimodal=True,
             allow_delegation=True,
-    
             llm=self.llm,
+            tools=self.tools,
         )
 
     async def invoke(self, stakeholder_inputs: Union[str, List[str]]) -> str:
-        """
-        Accepts raw project context (str) OR a list of multimodal inputs (file paths, transcripts).
-        """
-        logger.info(f"[BusinessAnalystAgent] Starting multimodal requirements analysis...")
-
+        logger.info(f"[BusinessAnalystAgent] Starting requirements analysis...")
         current_date = datetime.now().strftime("%Y-%m-%d")
-        # with MCPServerAdapter(server_params) as tools:
-        #     print(f"Available MCP tools: {[tool.name for tool in tools]}")
 
-        business_requirements_analysis_task = Task(
-            description=(
-                "This is a two-phase task requiring advanced business analysis expertise:\n\n"
-                "🔹 **Phase 1: Stakeholder Input Analysis**\n"
-                "- Perform a structured and critical analysis of the provided stakeholder inputs.\n"
-                "- Use advanced techniques such as SWOT analysis, PESTLE assessment, stakeholder influence mapping, "
-                "and regulatory/compliance impact evaluation.\n"
-                "- Identify conflicts, trade-offs, hidden assumptions, and alignment gaps across stakeholders.\n"
-                "- Summarize key business drivers, risks, and success enablers.\n\n"
-                "🔹 **Phase 2: BRD Creation**\n"
-                "- Based on the insights from Phase 1, craft an enterprise-grade Business Requirements Document (BRD) "
-                "for the strategic digital transformation project: development of an AI-driven global e-commerce platform.\n"
-                "- Ensure the document is tailored to inform and persuade executives, investors, project managers, "
-                "and solution architects, serving as the authoritative reference.\n"
-                "- Connect corporate vision to functional and technical requirements, ensure compliance with "
-                "data privacy and international regulations, and emphasize financial/operational implications.\n\n"
-                f"Inputs provided: {stakeholder_inputs}"
-            ),
-            expected_output=(
-                "Your final deliverable MUST include two comprehensive sections:\n\n"
-                "### 1. Advanced Stakeholder Input Analysis\n"
-                "- Stakeholder matrix (influence vs. interest)\n"
-                "- SWOT and/or PESTLE analysis of the project context\n"
-                "- Identification of competing priorities, conflicts, and trade-offs\n"
-                "- Key business drivers, risks, enablers, and regulatory considerations\n\n"
-                "### 2. Formal Business Requirements Document (BRD)\n"
-                "1. Executive Vision & Strategic Alignment\n"
-                "   - Business case, objectives, and value proposition\n"
-                "   - Alignment with corporate mission and long-term strategy\n\n"
-                "2. Market & Competitive Landscape\n"
-                "   - Benchmarking, trends, and opportunities\n"
-                "   - Differentiation factors and positioning\n\n"
-                "3. Project Scope & Boundaries\n"
-                "   - In-scope, out-of-scope, dependencies, and exclusions\n\n"
-                "4. Stakeholder & Governance Model\n"
-                "   - Governance structure and RACI matrix\n"
-                "   - Escalation paths and decision-making protocols\n\n"
-                "5. Detailed Business Requirements\n"
-                "   - Functional, non-functional, regulatory requirements\n"
-                "   - Prioritization matrix (Must/Should/Could/Won’t)\n\n"
-                "6. Current vs. Future State Blueprint\n"
-                "   - As-Is vs. To-Be workflows, supported by diagrams\n"
-                "   - Gap analysis and phased transformation roadmap\n\n"
-                "7. Risk & Compliance Considerations\n"
-                "   - Risk register with likelihood/impact scoring\n"
-                "   - Data privacy, cybersecurity, and regulatory obligations\n\n"
-                "8. Financial & ROI Analysis\n"
-                "   - High-level cost models, CAPEX vs. OPEX\n"
-                "   - ROI projections, break-even timeline, and sensitivity analysis\n\n"
-                "9. Success Metrics & KPIs\n"
-                "   - Leading and lagging indicators tied to business outcomes\n"
-                "   - Metrics for adoption, performance, and financial impact\n\n"
-                "10. Appendices\n"
-                "   - Glossary, reference models, raw stakeholder input mapping\n\n"
-                "### Document Metadata\n"
-                f"- Prepared By: Business Analyst Agent\n- Date: {current_date}"
-                " - use the MCP tool for web_search"
-            ),
-            agent=self.business_analyst,
-            #  tools=tools,
-              
-            output_file="output/business_requirements_document.md"
-           
-        )
+      
+        business_analysis_task = Task(
+                description=(
+                    "Act as the analytical engine that transforms the High-Level Project Vision Document "
+                    "into a structured **Business Requirements Specification**. Begin by retrieving the latest "
+                    "project vision from the knowledge base using the `knowledge_base_manager_tool`. \n\n"
 
+                    "⚠️ IMPORTANT TOOL USAGE RULES:\n"
+                    "- Always call tools with **valid JSON objects** as Action Input.\n"
+                    "- Do NOT use Python-style `=` or dict syntax.\n"
+                    "- Example (for retrieving vision document):\n"
+                    "Action: knowledge_base_manager_tool\n"
+                    "Action Input: {\n"
+                    "  \"action\": \"query_collection\",\n"
+                    "  \"collection_name\": \"project_vision\",\n"
+                    "  \"query\": \"latest project vision document\"\n"
+                    "}\n\n"
 
+                    "- Example (search the web for up-to-date information):\n"
+                        "Action: web_search\n"
+                        "Action Input: {\n"
+                        "  \"query\": \"<INSERT SPECIFIC RESEARCH QUESTION HERE, E.g., emerging trends in e-commerce personalization, PCI-DSS compliance for AI systems, etc.>\"\n"
+                        "}\n\n"
+
+                    "### Responsibilities:\n\n"
+                    "1. **Requirements Elicitation & Refinement**\n"
+                    "- Extract and refine functional and non-functional requirements from the vision.\n"
+                    "- Identify ambiguous, conflicting, or missing requirements.\n\n"
+
+                    "2. **Process & Value Analysis**\n"
+                    "- Map current vs. future state processes (high-level).\n"
+                    "- Identify pain points, bottlenecks, and value opportunities.\n\n"
+
+                    "3. **Stakeholder Needs Deep Dive**\n"
+                    "- Reassess stakeholder expectations and translate them into specific capabilities.\n"
+                    "- Highlight any misalignments between stakeholder desires and feasibility.\n\n"
+
+                    "4. **KPIs & Success Metrics Enhancement**\n"
+                    "- Refine high-level KPIs into SMART goals.\n"
+                    "- Define leading and lagging indicators.\n\n"
+
+                    "5. **Assumptions, Risks & Dependencies**\n"
+                    "- Expand on strategic risks with business impact assessments.\n"
+                    "- Identify organizational, data, and integration dependencies.\n\n"
+
+                    "6. **Regulatory & Compliance Alignment**\n"
+                    "- Assess alignment with GDPR, HIPAA, SOX, or other relevant standards.\n"
+                    "- Flag compliance risks and recommend controls.\n\n"
+
+                    "Once analysis is complete, generate a **Business Requirements Document** in Markdown format. "
+                    "Then, ingest this document into the knowledge base under the collection `business_analysis` "
+                    "using the `knowledge_base_manager_tool`.\n\n"
+
+                    "Finally, call the `markdown_to_pdf` tool to convert `/output/business_requirements.md` "
+                    "into `/output/business_requirements.pdf`."
+                ),
+                expected_output=(
+                    "A professional **Business Requirements Document** in clean Markdown format, including:\n"
+                    "- Documented business needs\n"
+                    "- Refined user capabilities\n"
+                    "- Process insights (current vs. future)\n"
+                    "- Detailed KPIs/OKRs\n"
+                    "- Risk & compliance assessment\n"
+                    "- Open questions and recommendations\n\n"
+                    "**Document Metadata**\n"
+                    "- Version: 1.0\n"
+                    "- Prepared By: [Business Analysis Agent]\n"
+                    f"- Date: {current_date}\n"
+                    "- Status: Draft\n"
+                    "- Source: Based on project_vision_document.md"
+                ),
+                agent=self.business_analyst,
+                tools=self.tools,
+                output_file="output/business_requirements.md"
+            )
+     
         crew = Crew(
             agents=[self.business_analyst],
-            tasks=[business_requirements_analysis_task],
+            tasks=[business_analysis_task],
             process=Process.sequential,
             verbose=True,
         )
@@ -173,16 +350,4 @@ class BusinessAnalystAgent:
             return str(result)
         except Exception as e:
             logger.error(f"[BusinessAnalystAgent] Crew execution failed: {e}")
-            return "Sorry, I couldn't generate the Business Requirements Document at this moment. Please try again later."
-        
-    def finalize(self, draft_output: str, human_feedback: str = "ok") -> str:
-            """Commit output only if human validates it, otherwise refine."""
-            if human_feedback.lower() == "ok":
-                with open("output/business_requirements_document.md", "w", encoding="utf-8") as f:
-                    f.write(draft_output)
-                logger.info("[BusinessAnalystAgent] Final BRD saved after human approval.")
-                return "Final BRD saved successfully."
-            else:
-                logger.info(f"[BusinessAnalystAgent] Re-running with human feedback: {human_feedback}")
-                # Here you could call self.invoke again with stakeholder_inputs + feedback
-                return f"Feedback received, please re-run with context: {human_feedback}"
+            return "Sorry, I couldn't generate the Business Requirements Document at this moment."
