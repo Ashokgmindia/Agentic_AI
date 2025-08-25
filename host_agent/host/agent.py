@@ -399,7 +399,7 @@ def build_parts(text: str = None, file_path: str = None, file_uri: str = None, m
 def _get_initialized_host_agent_sync():
     async def _async_main():
         remote_agent_urls = ["http://localhost:10004","http://localhost:10005",
-                             "http://localhost:10006", "http://localhost:10007", "http://localhost:10008"]
+                             "http://localhost:10006", "http://localhost:10007", "http://localhost:10008","http://localhost:10009"]
         logger.info("Initializing host agent...")
         hosting_agent_instance = await HostAgent.create(
             remote_agent_addresses=remote_agent_urls

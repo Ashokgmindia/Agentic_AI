@@ -41,12 +41,17 @@ short_term_memory = ShortTermMemory(
     )
 )
 
+with MCPServerAdapter(server_params_list) as tools:
+                    print(f"Available MCP tools: {[tool.name for tool in tools]}")
+
 class StakeholderAgent:
     """Agent that handles stakeholder requirements analysis and BRD generation."""
+    
     SUPPORTED_CONTENT_TYPES = [
         "text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "image/jpeg", "image/png", "audio/wav", "audio/mp3"
     ]
+    
 
     def __init__(self):
         if os.getenv("GEMINI_API_KEY"):
@@ -77,13 +82,16 @@ class StakeholderAgent:
                 "You ensure traceability, enforce version control, and drive alignment across strategic objectives, user journeys, "
                 "and system capabilities. "
                 "You are designed to collaborate with other crew agents, asking questions, escalating risks, and synthesizing consensus "
-                "into decision-ready artifacts."
+                "into decision-ready artifacts. "
+                "Also, use the MCP tool `knowledge_base_manager_tool` to ensure the initial stakeholder inputs are stored in the Knowledge Base."
             ),
+
             verbose=True,
             memory=True,
             multimodal=True,
             allow_delegation=True,
             reasoning=True,  
+            tools=tools,   
             max_reasoning_attempts=3,
             llm=self.llm,
         )
@@ -93,31 +101,50 @@ class StakeholderAgent:
         current_date = datetime.now().strftime("%Y-%m-%d")
 
         
-        with MCPServerAdapter(server_params_list) as tools:
-            print(f"Available MCP tools: {[tool.name for tool in tools]}")
+         
+        # with MCPServerAdapter(server_params_list) as tools:
+        #             print(f"Available MCP tools: {[tool.name for tool in tools]}")
 
-            high_level_vision_task = Task(
+        high_level_vision_task = Task(
                 description=(
-                    f"Act as the strategic synthesis engine for enterprise-level solution visioning. "
-                    f"Your mission is to transform the following stakeholder inputs: '{stakeholder_inputs}' "
-                    "into a **High-Level Project Vision Document (Vision & Scope Document)**.\n\n"
-                    "⚠️ If inputs are unclear or incomplete, flag them under 'Open Questions'.\n\n"
+                f"Act as the strategic synthesis engine for enterprise-level solution visioning. "
+                f"Transform the following stakeholder inputs: '{stakeholder_inputs}' "
+                "into a **High-Level Project Vision Document**. First, ingest the raw "
+                "stakeholder inputs into the 'stakeholder_inputs' collection in the knowledge base. "
+                "Then, create the vision document.\n\n"
+                "### Responsibilities:\n\n"
+                "1. **Vision & Strategic Alignment**\n"
+                "- Define the vision and business goals.\n"
+                "- Explain alignment with organizational strategy.\n\n"
+                "2. **Project Scope**\n"
+                "- Define in-scope and out-of-scope areas.\n"
+                "- Identify assumptions and constraints.\n\n"
+                "3. **Stakeholder Overview**\n"
+                "- Identify key stakeholder groups.\n"
+                "- Explain their interests, influence, and expectations.\n\n"
+                "4. **High-Level Features / Capabilities**\n"
+                "- Outline proposed key features.\n\n"
+                "5. **Risks & Dependencies**\n"
+                "- Identify strategic risks and high-level mitigations.\n\n"
+                "6. **Success Metrics (KPIs/OKRs)**\n"
+                "- Define how success will be measured at a strategic level.\n\n"
+                "⚠️ If inputs are unclear or incomplete, flag them under 'Open Questions'."
                     "Once the Markdown document is created, call the `markdown_to_pdf` tool to "
                     "convert `/output/project_vision_document.md` into `/output/project_vision_document.pdf`."
                 ),
-                expected_output=(
+               expected_output=(
                     "Deliver a professional **High-Level Project Vision Document** in clean Markdown format, "
                     "structured with sections: Vision, Business Goals, Scope, Stakeholders, Features, Risks, "
                     "Success Metrics, Roadmap, Open Questions. \n\n"
                     f"**Document Metadata**\n- Version: 1.0\n- Prepared By: [Stakeholder Intelligence Agent]\n"
                     f"- Date: {current_date}\n- Status: Draft"
-                ),
+                ),          
                 agent=self.stakeholder_agent,
-                tools=tools,   
+                # tools=tools,   
                 output_file="output/project_vision_document.md"
             )
 
-            crew = Crew(
+        crew = Crew(
                 agents=[self.stakeholder_agent],
                 tasks=[high_level_vision_task],
                 memory=True,
@@ -129,10 +156,14 @@ class StakeholderAgent:
                 verbose=True,
             )
 
-            try:
+        try:
                 result = await crew.kickoff_async(inputs={"stakeholder_inputs": stakeholder_inputs})
                 logger.info(f"[StakeholderAgent] Crew final response: {result}")
                 return str(result)
-            except Exception as e:
+        except Exception as e:
                 logger.error(f"[StakeholderAgent] Crew execution failed: {e}")
                 return " Sorry, I couldn't generate the Business Requirements Document at this moment."
+        
+
+# stakeholder_agent_wrapper = StakeholderAgent()
+# stakeholder_agent = stakeholder_agent_wrapper.stakeholder_agent

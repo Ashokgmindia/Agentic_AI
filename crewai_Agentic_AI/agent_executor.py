@@ -10,6 +10,8 @@ from BusinessAnalyst_Agent import BusinessAnalystAgent
 from business_analyst_domain_expert import BusinessAnalystDomainExpert
 from product_manager import ProductManagerAgent
 from agile_project_manager import AgileProjectManagerAgent
+from MarketAnalyst_Agent import MarketAnalystAgent
+
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +90,7 @@ class BusinessAnalystAgentExecutor(AgentExecutor):
             raise ServerError(error=InvalidParamsError())
 
         try:
-            result = self.agent.invoke(context.get_user_input())
+            result =await self.agent.invoke(context.get_user_input())
             logger.info(f"BusinessAnalystAgent result: {result}")
         except Exception as e:
             logger.error(f"Error invoking BusinessAnalystAgent: {e}")
@@ -140,6 +142,54 @@ class DomainExpertAgentExecutor(AgentExecutor):
             logger.info(f"DomainExpertAgent result: {result}")
         except Exception as e:
             logger.error(f"Error invoking DomainExpertAgent: {e}")
+            raise ServerError(error=InternalError()) from e
+
+        parts = [Part(root=TextPart(text=result))]
+        await updater.add_artifact(parts)
+        await updater.complete()
+
+    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+        logger.warning("Cancel operation not supported.")
+        raise ServerError(error=UnsupportedOperationError())
+
+    def _validate_request(self, context: RequestContext) -> bool:
+        try:
+            user_input = context.get_user_input()
+            return not user_input or not user_input.strip()
+        except Exception:
+            return True
+
+
+# ---------------- Market Analyst ----------------
+class MarketAnalystAgentExecutor(AgentExecutor):
+    """AgentExecutor for the Market Analyst agent."""
+
+    def __init__(self):
+        try:
+            self.agent = MarketAnalystAgent()
+        except Exception as e:
+            logger.error(f"Failed to initialize MarketAnalystAgent: {e}")
+            raise
+
+    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
+        if not context.task_id or not context.context_id:
+            raise ValueError("RequestContext must have task_id and context_id")
+        if not context.message:
+            raise ValueError("RequestContext must have a message")
+
+        updater = TaskUpdater(event_queue, context.task_id, context.context_id)
+        if not context.current_task:
+            await updater.submit()
+        await updater.start_work()
+
+        if self._validate_request(context):
+            raise ServerError(error=InvalidParamsError())
+
+        try:
+            result = await self.agent.invoke(context.get_user_input())
+            logger.info(f"MarketAnalystAgent result: {result}")
+        except Exception as e:
+            logger.error(f"Error invoking MarketAnalystAgent: {e}")
             raise ServerError(error=InternalError()) from e
 
         parts = [Part(root=TextPart(text=result))]

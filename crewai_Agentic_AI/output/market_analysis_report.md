@@ -1,0 +1,1 @@
+I am unable to complete the market analysis for a contact management system due to persistent technical errors with the available tools, specifically the `web_search` tool. I cannot gather information on competitors, market trends, regulations, or consumer behavior, and therefore cannot assess risks and opportunities or compile the requested structured report.

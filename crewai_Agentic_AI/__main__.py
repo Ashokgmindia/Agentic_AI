@@ -12,8 +12,12 @@ from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 from Stakeholder_Agent import StakeholderAgent
 from BusinessAnalyst_Agent import BusinessAnalystAgent
 from business_analyst_domain_expert import BusinessAnalystDomainExpert
+from MarketAnalyst_Agent import MarketAnalystAgent
 from product_manager import ProductManagerAgent
 from agile_project_manager import AgileProjectManagerAgent
+
+
+
 
 
 
@@ -21,6 +25,7 @@ from agent_executor import (
     StakeholderAgentExecutor,
     BusinessAnalystAgentExecutor,
     DomainExpertAgentExecutor,
+    MarketAnalystAgentExecutor,
     ProductManagerAgentExecutor,
     AgileProjectManagerAgentExecutor,
 )
@@ -102,7 +107,7 @@ def create_domain_expert_app(host: str, port: int):
         id="business_analyst_domain_expert",
         name="Business Analyst (Domain Expert)",
         description="Provides deep domain expertise, aligning requirements with industry standards, regulations, and best practices.",
-        tags=["business-analysis", "requirements", "BRD", "domain-expert", "compliance"],
+        tags=["business-analysis", "requirements", "domain-expert", "compliance"],
         examples=[
             "Review healthcare compliance requirements and produce a BRD",
             "Analyze banking regulations and align them with project objectives",
@@ -122,6 +127,34 @@ def create_domain_expert_app(host: str, port: int):
     handler = DefaultRequestHandler(agent_executor=DomainExpertAgentExecutor(), task_store=InMemoryTaskStore())
     return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
+
+
+def create_market_app(host: str, port: int):
+    capabilities = AgentCapabilities(streaming=False)
+    skill = AgentSkill(
+        id="market_analyst",
+        name="Market Analyst",
+        description="Performs comprehensive market analysis from stakeholder inputs, covering competitors, trends, risks, and opportunities.",
+        tags=["market-analysis", "competitors", "trends", "strategy", "risks"],
+        examples=[
+            "Analyze the electric vehicle market in Europe",
+            "Perform competitor research for a new fintech startup",
+            "Summarize key risks and opportunities in the cloud computing market",
+            "Identify major consumer behavior trends in the mobile payments industry",
+        ],
+    )
+    agent_card = AgentCard(
+        name="Market Analyst Agent",
+        description="Transforms stakeholder input into actionable market research reports.",
+        url=f"http://{host}:{port}/",
+        version="1.0.0",
+        defaultInputModes=["text/plain"],  # adjust to multimodal if needed
+        defaultOutputModes=["text/markdown"],
+        capabilities=capabilities,
+        skills=[skill],
+    )
+    handler = DefaultRequestHandler(agent_executor=MarketAnalystAgentExecutor(), task_store=InMemoryTaskStore())
+    return A2AStarletteApplication(agent_card=agent_card, http_handler=handler)
 
 def create_product_manager_app(host: str, port: int):
     capabilities = AgentCapabilities(streaming=False)
@@ -187,15 +220,17 @@ async def main():
         stakeholder_app = create_stakeholder_app(host, 10004)
         business_app = create_business_app(host, 10005)
         domain_expert_app = create_domain_expert_app(host, 10006)
-        product_manager_app = create_product_manager_app(host, 10007)
-        agile_pm_app = create_agile_pm_app(host, 10008)
+        market_app = create_market_app(host, 10007)
+        product_manager_app = create_product_manager_app(host, 10008)
+        agile_pm_app = create_agile_pm_app(host, 10009)
 
         # Configs
         config1 = uvicorn.Config(stakeholder_app.build(), host=host, port=10004, log_level="info")
         config2 = uvicorn.Config(business_app.build(), host=host, port=10005, log_level="info")
         config3 = uvicorn.Config(domain_expert_app.build(), host=host, port=10006, log_level="info")
-        config4 = uvicorn.Config(product_manager_app.build(), host=host, port=10007, log_level="info")
-        config5 = uvicorn.Config(agile_pm_app.build(), host=host, port=10008, log_level="info")
+        config4 = uvicorn.Config(market_app.build(), host=host, port=10007, log_level="info") 
+        config5 = uvicorn.Config(product_manager_app.build(), host=host, port=10008, log_level="info")
+        config6 = uvicorn.Config(agile_pm_app.build(), host=host, port=10009, log_level="info")
 
         # Servers
         server1 = uvicorn.Server(config1)
@@ -203,10 +238,11 @@ async def main():
         server3 = uvicorn.Server(config3)
         server4 = uvicorn.Server(config4)
         server5 = uvicorn.Server(config5)
+        server6 = uvicorn.Server(config6)
 
         logger.info(
-            "Starting Stakeholder (10004), Business Analyst (10005), Domain Expert (10006), "
-            "Product Manager (10007), and Agile Project Manager (10008)..."
+            "Starting Stakeholder (10004), Business Analyst (10005), Domain Expert (10006), Market Analyst (10007) "
+            "Product Manager (10008), and Agile Project Manager (10009) ..."
         )
         await asyncio.gather(
             server1.serve(),
@@ -214,6 +250,7 @@ async def main():
             server3.serve(),
             server4.serve(),
             server5.serve(),
+            server6.serve(),
         )
 
     except MissingAPIKeyError as e:
