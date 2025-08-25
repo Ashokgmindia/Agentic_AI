@@ -12,23 +12,24 @@ from crewai.memory.storage.rag_storage import RAGStorage
 load_dotenv()
 logger = logging.getLogger(__name__)
 
+
 server_params_list = [
     StdioServerParameters(
         command="python",
-        args=["server/stakeholder_tools.py"], 
+        args=["server/stakeholder_tools.py"],
         env={"UV_PYTHON": "3.12", **os.environ},
     ),
     StdioServerParameters(
         command="python",
-        args=["server/Rag_tools.py"], 
+        args=["server/Rag_tools.py"],
         env={"UV_PYTHON": "3.12", **os.environ},
     )
 ]
 
+
 long_term_memory = LongTermMemory(
     storage=LTMSQLiteStorage(db_path="./memory/long_term_memory.db")
 )
-
 
 short_term_memory = ShortTermMemory(
     storage=RAGStorage(
@@ -41,28 +42,34 @@ short_term_memory = ShortTermMemory(
     )
 )
 
-with MCPServerAdapter(server_params_list) as tools:
-                    print(f"Available MCP tools: {[tool.name for tool in tools]}")
 
 class StakeholderAgent:
     """Agent that handles stakeholder requirements analysis and BRD generation."""
-    
+
     SUPPORTED_CONTENT_TYPES = [
-        "text/plain", "application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "text/plain", "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "image/jpeg", "image/png", "audio/wav", "audio/mp3"
     ]
-    
 
     def __init__(self):
+       
         if os.getenv("GEMINI_API_KEY"):
             self.llm = LLM(
                 model="gemini/gemini-2.5-flash-lite-preview-06-17",
-                 temperature=0.7,
+                temperature=0.7,
                 api_key=os.getenv("GEMINI_API_KEY")
             )
         else:
             raise ValueError("GEMINI_API_KEY environment variable not set.")
 
+       
+        self.tools_adapter = MCPServerAdapter(server_params_list)
+        self.tools = self.tools_adapter.__enter__()  
+
+        logger.info(f"[StakeholderAgent] Available MCP tools: {[tool.name for tool in self.tools]}")
+
+       
         self.stakeholder_agent = Agent(
             role="Senior Stakeholder Intelligence & Requirements Synthesis Agent",
             goal=(
@@ -85,32 +92,40 @@ class StakeholderAgent:
                 "into decision-ready artifacts. "
                 "Also, use the MCP tool `knowledge_base_manager_tool` to ensure the initial stakeholder inputs are stored in the Knowledge Base."
             ),
-
             verbose=True,
             memory=True,
             multimodal=True,
-            allow_delegation=True,
-            reasoning=True,  
-            tools=tools,   
+            reasoning=True,    
             max_reasoning_attempts=3,
+            allow_delegation=True,
             llm=self.llm,
+            tools=self.tools,
         )
 
     async def invoke(self, stakeholder_inputs: str) -> str:
+        """Run the workflow to generate a High-Level Vision Document."""
         logger.info(f"[StakeholderAgent] Starting BRD generation workflow for inputs: {stakeholder_inputs[:100]}...")
         current_date = datetime.now().strftime("%Y-%m-%d")
 
-        
-         
-        # with MCPServerAdapter(server_params_list) as tools:
-        #             print(f"Available MCP tools: {[tool.name for tool in tools]}")
-
         high_level_vision_task = Task(
-                description=(
+            description=(
                 f"Act as the strategic synthesis engine for enterprise-level solution visioning. "
                 f"Transform the following stakeholder inputs: '{stakeholder_inputs}' "
                 "into a **High-Level Project Vision Document**. First, ingest the raw "
-                "stakeholder inputs into the 'stakeholder_inputs' collection in the knowledge base. "
+                "stakeholder inputs into the 'stakeholder_inputs' collection in the knowledge base "
+                "using the tool `knowledge_base_manager_tool`. \n\n"
+
+                "⚠️ IMPORTANT TOOL USAGE RULES:\n"
+                "- Always call tools with **valid JSON objects** as Action Input.\n"
+                "- Do NOT use Python-style `=` or dict syntax.\n"
+                "- Example (for ingesting stakeholder text):\n"
+                "Action: knowledge_base_manager_tool\n"
+                "Action Input: {\n"
+                "  \"action\": \"ingest_text\",\n"
+                "  \"collection_name\": \"stakeholder_inputs\",\n"
+                "  \"text\": \"<PUT_THE_STAKEHOLDER_INPUT_HERE>\"\n"
+                "}\n\n"
+
                 "Then, create the vision document.\n\n"
                 "### Responsibilities:\n\n"
                 "1. **Vision & Strategic Alignment**\n"
@@ -128,42 +143,42 @@ class StakeholderAgent:
                 "- Identify strategic risks and high-level mitigations.\n\n"
                 "6. **Success Metrics (KPIs/OKRs)**\n"
                 "- Define how success will be measured at a strategic level.\n\n"
-                "⚠️ If inputs are unclear or incomplete, flag them under 'Open Questions'."
-                    "Once the Markdown document is created, call the `markdown_to_pdf` tool to "
-                    "convert `/output/project_vision_document.md` into `/output/project_vision_document.pdf`."
-                ),
-               expected_output=(
-                    "Deliver a professional **High-Level Project Vision Document** in clean Markdown format, "
-                    "structured with sections: Vision, Business Goals, Scope, Stakeholders, Features, Risks, "
-                    "Success Metrics, Roadmap, Open Questions. \n\n"
-                    f"**Document Metadata**\n- Version: 1.0\n- Prepared By: [Stakeholder Intelligence Agent]\n"
-                    f"- Date: {current_date}\n- Status: Draft"
-                ),          
-                agent=self.stakeholder_agent,
-                # tools=tools,   
-                output_file="output/project_vision_document.md"
-            )
+                "⚠️ If inputs are unclear or incomplete, flag them under 'Open Questions'. "
+                "Once the Markdown document is created, call the `markdown_to_pdf` tool to "
+                "convert `/output/project_vision_document.md` into `/output/project_vision_document.pdf`."
+            ),
+            expected_output=(
+                "Deliver a professional **High-Level Project Vision Document** in clean Markdown format, "
+                "structured with sections: Vision, Business Goals, Scope, Stakeholders, Features, Risks, "
+                "Success Metrics, Roadmap, Open Questions. \n\n"
+                f"**Document Metadata**\n- Version: 1.0\n- Prepared By: [Stakeholder Intelligence Agent]\n"
+                f"- Date: {current_date}\n- Status: Draft"
+            ),
+            agent=self.stakeholder_agent,
+            tools=self.tools,
+            output_file="output/project_vision_document.md"
+        )
 
         crew = Crew(
-                agents=[self.stakeholder_agent],
-                tasks=[high_level_vision_task],
-                memory=True,
-                long_term_memory=long_term_memory,
-                short_term_memory=short_term_memory,
-                # planning=True,
-                # planning_llm=self.llm,
-                process=Process.sequential,
-                verbose=True,
-            )
+            agents=[self.stakeholder_agent],
+            tasks=[high_level_vision_task],
+            memory=True,
+            long_term_memory=long_term_memory,
+            short_term_memory=short_term_memory,
+            planning=True,
+            planning_llm=self.llm,
+            process=Process.sequential,
+            verbose=True,
+        )
 
         try:
-                result = await crew.kickoff_async(inputs={"stakeholder_inputs": stakeholder_inputs})
-                logger.info(f"[StakeholderAgent] Crew final response: {result}")
-                return str(result)
+            result = await crew.kickoff_async(inputs={"stakeholder_inputs": stakeholder_inputs})
+            logger.info(f"[StakeholderAgent] Crew final response: {result}")
+            return str(result)
         except Exception as e:
-                logger.error(f"[StakeholderAgent] Crew execution failed: {e}")
-                return " Sorry, I couldn't generate the Business Requirements Document at this moment."
-        
+            logger.error(f"[StakeholderAgent] Crew execution failed: {e}")
+            return "Sorry, I couldn't generate the Business Requirements Document at this moment."
+
 
 # stakeholder_agent_wrapper = StakeholderAgent()
 # stakeholder_agent = stakeholder_agent_wrapper.stakeholder_agent
